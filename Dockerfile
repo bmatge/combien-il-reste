@@ -13,9 +13,9 @@ RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 COPY api/ ./api/
-COPY scripts/dev-api.js ./scripts/dev-api.js
+COPY scripts/serve-api.js ./scripts/serve-api.js
 EXPOSE 3001
-CMD ["node", "scripts/dev-api.js"]
+CMD ["node", "scripts/serve-api.js"]
 
 # --- Frontend (nginx) ---
 FROM nginx:alpine AS frontend
