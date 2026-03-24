@@ -1,0 +1,24 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    volumes:
+      - ./data:/app/data:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    depends_on:
+      - api
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M

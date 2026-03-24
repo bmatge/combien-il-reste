@@ -1,0 +1,21 @@
+# Production — usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  api:
+    restart: always
+
+  frontend:
+    restart: always
+    networks:
+      - default
+      - ecosystem-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.combien.rule=Host(`combien.matge.com`)"
+      - "traefik.http.routers.combien.entrypoints=websecure"
+      - "traefik.http.routers.combien.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.combien.priority=100"
+      - "traefik.http.services.combien.loadbalancer.server.port=80"
+
+networks:
+  ecosystem-network:
+    external: true

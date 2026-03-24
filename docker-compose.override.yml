@@ -1,0 +1,12 @@
+# Development — docker compose up
+services:
+  api:
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./api:/app/api
+      - ./data:/app/data:ro
+
+  frontend:
+    ports:
+      - "8080:80"

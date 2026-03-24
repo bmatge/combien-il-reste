@@ -1,0 +1,36 @@
+{
+  "name": "combien-il-reste",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev-api.js & vite",
+    "dev:api": "node scripts/dev-api.js",
+    "dev:front": "vite",
+    "build": "vite build",
+    "build:db": "python scripts/build_db.py",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.2",
+    "recharts": "^3.8.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "express": "^5.2.1",
+    "globals": "^17.4.0",
+    "tailwindcss": "^4.2.2",
+    "vite": "^8.0.1"
+  }
+}

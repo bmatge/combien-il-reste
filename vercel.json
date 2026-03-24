@@ -1,0 +1,12 @@
+{
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/prenom.js": {
+      "includeFiles": "data/prenoms.db"
+    }
+  }
+}
