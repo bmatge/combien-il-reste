@@ -550,6 +550,9 @@ def main():
             conn.executescript(index_map[step])
 
     conn.execute("ANALYZE")
+    # Switch out of WAL mode so the DB is a single file (no -shm/-wal)
+    conn.execute("PRAGMA journal_mode=DELETE")
+    conn.execute("VACUUM")
     conn.commit()
     conn.close()
 

@@ -9,8 +9,7 @@ let db
 function getDb() {
   if (!db) {
     console.log(`Opening database: ${DB_PATH}`)
-    db = new Database(DB_PATH, { readonly: true })
-    db.pragma('journal_mode = WAL')
+    db = new Database(DB_PATH, { readonly: true, fileMustExist: true })
     db.pragma('cache_size = -64000') // 64MB cache
     console.log(`Database opened successfully`)
   }

@@ -4,7 +4,7 @@ services:
       context: .
       target: api
     volumes:
-      - ./data:/app/data:ro
+      - ./data/prenoms.db:/app/data/prenoms.db:ro
     restart: unless-stopped
     deploy:
       resources:
