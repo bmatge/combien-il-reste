@@ -3,14 +3,16 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = path.join(__dirname, '..', 'data', 'prenoms.db')
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'prenoms.db')
 
 let db
 function getDb() {
   if (!db) {
+    console.log(`Opening database: ${DB_PATH}`)
     db = new Database(DB_PATH, { readonly: true })
     db.pragma('journal_mode = WAL')
     db.pragma('cache_size = -64000') // 64MB cache
+    console.log(`Database opened successfully`)
   }
   return db
 }
