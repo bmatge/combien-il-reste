@@ -5,12 +5,23 @@ node_modules/
 dist/
 dist-ssr/
 
-# Data (raw files, too large for git)
-data/
+# Data — raw source files (too large for git)
+data/deces/
+data/rne/
+data/prenoms-2024-nat.csv
+data/pop_age_2026.xlsx
+data/nat2024*
+data/estim_pop*
+data/prenoms.zip
+data/prenoms.db-shm
+data/prenoms.db-wal
 
-# Generated stats (re-buildable)
+# Keep these in git:
+# data/prenoms.db          → Git LFS (85 Mo)
+# data/celebrities/        → CSV + images zip (14 Mo)
+
+# Old generated stats
 public/prenoms_stats.json
-public/celebrites/
 
 # Environment
 *.local
