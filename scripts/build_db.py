@@ -362,6 +362,75 @@ def load_celebrites(conn):
     print("📊 [E] Chargement des célébrités...")
     import csv
 
+    # Mapping pluriel → (masculin singulier, féminin singulier)
+    CATEGORIE_MAP = {
+        "Acteurs":                      ("Acteur", "Actrice"),
+        "Chanteurs":                    ("Chanteur", "Chanteuse"),
+        "Responsables politiques":      ("Homme politique", "Femme politique"),
+        "Sportifs":                     ("Sportif", "Sportive"),
+        "Écrivains":                    ("Écrivain", "Écrivaine"),
+        "Réalisateurs":                 ("Réalisateur", "Réalisatrice"),
+        "Journalistes":                 ("Journaliste", "Journaliste"),
+        "Animateurs":                   ("Animateur", "Animatrice"),
+        "Personnalités d'affaires":     ("Homme d'affaires", "Femme d'affaires"),
+        "Dessinateurs":                 ("Dessinateur", "Dessinatrice"),
+        "Musiciens":                    ("Musicien", "Musicienne"),
+        "Compositeurs":                 ("Compositeur", "Compositrice"),
+        "Humoristes":                   ("Humoriste", "Humoriste"),
+        "Producteurs":                  ("Producteur", "Productrice"),
+        "Créateurs de mode":            ("Créateur de mode", "Créatrice de mode"),
+        "Scientifiques":                ("Scientifique", "Scientifique"),
+        "Cuisiniers":                   ("Cuisinier", "Cuisinière"),
+        "Religieux":                    ("Religieux", "Religieuse"),
+        "Éditeurs":                     ("Éditeur", "Éditrice"),
+        "Danseurs":                     ("Danseur", "Danseuse"),
+        "Noblesse et royautés":         ("Noble", "Noble"),
+        "Médecins":                     ("Médecin", "Médecin"),
+        "Ingénieurs":                   ("Ingénieur", "Ingénieure"),
+        "Criminels":                    ("Criminel", "Criminelle"),
+        "Avocats":                      ("Avocat", "Avocate"),
+        "Astronautes":                  ("Astronaute", "Astronaute"),
+        "Syndicalistes":                ("Syndicaliste", "Syndicaliste"),
+        "Premières dames":              ("Première dame", "Première dame"),
+        "Chefs d'orchestre":            ("Chef d'orchestre", "Cheffe d'orchestre"),
+        "Architectes":                  ("Architecte", "Architecte"),
+        "Photographes":                 ("Photographe", "Photographe"),
+        "Militaires":                   ("Militaire", "Militaire"),
+        "Inventeurs":                   ("Inventeur", "Inventrice"),
+        "Scénaristes":                  ("Scénariste", "Scénariste"),
+        "Sculpteurs":                   ("Sculpteur", "Sculptrice"),
+        "Philosophes":                  ("Philosophe", "Philosophe"),
+        "Peintres":                     ("Peintre", "Peintre"),
+        "Mannequins":                   ("Mannequin", "Mannequin"),
+        "Economistes":                  ("Économiste", "Économiste"),
+        "Personnalités des réseaux sociaux": ("Influenceur", "Influenceuse"),
+        "Milliardaires":                ("Milliardaire", "Milliardaire"),
+        "Metteurs en scène":            ("Metteur en scène", "Metteuse en scène"),
+        "Marques de fondateurs":        ("Fondateur", "Fondatrice"),
+        "Magiciens":                    ("Magicien", "Magicienne"),
+        "Joueurs d'échecs":             ("Joueur d'échecs", "Joueuse d'échecs"),
+        "Historiens":                   ("Historien", "Historienne"),
+        "Développeurs":                 ("Développeur", "Développeuse"),
+        "Aviateurs":                    ("Aviateur", "Aviatrice"),
+        "Divers":                       ("Personnalité", "Personnalité"),
+    }
+
+    # Build sex lookup from naissances table
+    sexe_par_prenom = {}
+    if table_exists(conn, "naissances"):
+        rows_sex = conn.execute(
+            "SELECT prenom, sexe, SUM(nombre) as n FROM naissances GROUP BY prenom, sexe"
+        ).fetchall()
+        prenom_sex_counts = {}
+        for prenom, sexe, n in rows_sex:
+            if prenom not in prenom_sex_counts:
+                prenom_sex_counts[prenom] = {}
+            prenom_sex_counts[prenom][sexe] = n
+        for prenom, counts in prenom_sex_counts.items():
+            h = counts.get("1", 0)
+            f = counts.get("2", 0)
+            sexe_par_prenom[prenom] = "F" if f > h else "M"
+
     path = DATA_DIR / "celebrities" / "personnalites_francaises_decedees_2000_2026.csv"
     if not path.exists():
         print("   ⚠️  Fichier célébrités non trouvé")
@@ -378,8 +447,16 @@ def load_celebrites(conn):
 
             prenom = normalize_prenom(prenom_raw)
             nom_complet = f"{prenom_raw} {nom}"
-            categorie = row.get("Catégorie", "").strip()
+            cat_pluriel = row.get("Catégorie", "").strip()
             image = row.get("Fichier image", "").strip() or None
+
+            # Resolve gendered singular category
+            sexe = sexe_par_prenom.get(prenom, "M")
+            cat_pair = CATEGORIE_MAP.get(cat_pluriel)
+            if cat_pair:
+                categorie = cat_pair[1] if sexe == "F" else cat_pair[0]
+            else:
+                categorie = cat_pluriel  # fallback
 
             try:
                 annee_naissance = int(row.get("Année de naissance", 0))
@@ -392,7 +469,6 @@ def load_celebrites(conn):
 
             date_deces = row.get("Date de décès", "")
             try:
-                # Format: JJ/MM/AAAA
                 parts = date_deces.split("/")
                 annee_deces = int(parts[2]) if len(parts) == 3 else None
             except (ValueError, TypeError, IndexError):
@@ -550,10 +626,16 @@ def main():
             conn.executescript(index_map[step])
 
     conn.execute("ANALYZE")
-    # Switch out of WAL mode so the DB is a single file (no -shm/-wal)
-    conn.execute("PRAGMA journal_mode=DELETE")
-    conn.execute("VACUUM")
     conn.commit()
+
+    # Switch out of WAL mode so the DB is a single file (no -shm/-wal)
+    try:
+        conn.execute("PRAGMA journal_mode=DELETE")
+        conn.execute("VACUUM")
+        conn.commit()
+    except sqlite3.OperationalError as e:
+        print(f"   ⚠️  VACUUM skippé ({e}) — relancer sans l'API pour compacter")
+
     conn.close()
 
     size_mb = DB_PATH.stat().st_size / (1024 * 1024)

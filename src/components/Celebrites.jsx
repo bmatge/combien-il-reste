@@ -4,9 +4,9 @@ function getLongevityLabel(ageDeces, ageMedian) {
   if (ageMedian == null || ageDeces == null) return null
   const diff = ageDeces - ageMedian
   if (diff <= -15) return { text: 'Parti trop tôt', color: 'text-rouge' }
-  if (diff <= -5)  return { text: 'Précurseur', color: 'text-orange' }
+  if (diff <= -5)  return { text: 'Parti tôt', color: 'text-orange' }
   if (diff >= 15)  return { text: 'Doyen', color: 'text-vert' }
-  if (diff >= 5)   return { text: 'Survivant', color: 'text-bleu' }
+  if (diff >= 5)   return { text: 'Belle longévité', color: 'text-bleu' }
   return { text: 'Dans la moyenne', color: 'text-gris' }
 }
 
