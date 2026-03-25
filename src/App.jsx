@@ -117,7 +117,7 @@ function Home() {
           <div className="mt-12 text-center text-gris">
             <p className="text-lg">Tapez un prénom pour commencer.</p>
             <p className="text-sm mt-4 opacity-60">
-              Produit avec les moyens de l'État.<br />
+              Construit avec les données de l'État.<br />
               Toute ressemblance avec un Gérard de votre entourage est purement statistique.
             </p>
           </div>
