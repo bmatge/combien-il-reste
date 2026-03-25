@@ -3,15 +3,19 @@ import { titleCase, formatNumber } from '../utils/prenomUtils'
 import Header from '../components/Header'
 
 const API_BASE = '/api/prenom'
-const ROUNDS = 8
+const ROUNDS = 6
 const SCORE_MAX = 1000
 
-// Prenom pools for "combien il en reste" questions
-const QUIZ_PRENOMS = [
-  'JEAN', 'MARIE', 'BERNARD', 'YVETTE', 'KEVIN', 'GERARD', 'CLAUDE', 'PIERRE',
-  'FRANCOISE', 'JACQUES', 'NICOLAS', 'NATHALIE', 'PHILIPPE', 'ALAIN', 'MICHEL',
-  'CHRISTOPHE', 'SYLVIE', 'PATRICK', 'MONIQUE', 'SANDRINE', 'THIERRY', 'MARCEL',
-  'RENE', 'ALBERT', 'SIMONE', 'DENISE', 'VIRGINIE', 'ELODIE', 'STEPHANIE',
+// Pools split by rarity for balanced quiz
+const PRENOMS_COMMUNS = [
+  'JEAN', 'MARIE', 'PIERRE', 'PHILIPPE', 'NICOLAS', 'NATHALIE', 'MICHEL',
+  'CHRISTOPHE', 'SYLVIE', 'PATRICK', 'ALAIN', 'BERNARD', 'GERARD', 'KEVIN',
+  'JACQUES', 'FRANCOISE', 'MONIQUE', 'SANDRINE', 'THIERRY', 'STEPHANIE',
+]
+const PRENOMS_RARES = [
+  'YVETTE', 'MARCEL', 'RENE', 'ALBERT', 'SIMONE', 'DENISE', 'BERTHE',
+  'FERNAND', 'GASTON', 'LUCIENNE', 'COLETTE', 'GERMAINE', 'RAYMONDE',
+  'VIRGINIE', 'ELODIE', 'CLAUDE', 'ODETTE', 'LEONTINE', 'ARISTIDE',
 ]
 
 function shuffle(arr) {
@@ -365,29 +369,52 @@ export default function Quiz() {
 
   const buildQuestions = useCallback(async () => {
     setLoading(true)
-    const qs = []
-    const prenoms = shuffle(QUIZ_PRENOMS).slice(0, 10)
 
-    for (const p of prenoms) {
+    // Helper: fetch a prenom and build an estimate question
+    async function fetchEstimate(prenom) {
       try {
-        const res = await fetch(`${API_BASE}?q=${p}`)
-        if (!res.ok) continue
+        const res = await fetch(`${API_BASE}?q=${prenom}`)
+        if (!res.ok) return null
         const data = await res.json()
-
-        // "Combien il en reste" question
-        if (data.vivants > 100) {
-          qs.push(makeHowManyQuestion(data.prenom, data.vivants))
-        }
-
-        // Celebrity questions
-        if (data.celebrites?.length > 0) {
-          const celeb = data.celebrites[Math.floor(Math.random() * data.celebrites.length)]
-          if (celeb.annee_deces && celeb.age_deces) {
-            qs.push(Math.random() > 0.5 ? makeDeathYearQuestion(celeb) : makeDeathAgeQuestion(celeb))
-          }
-        }
-      } catch { continue }
+        if (data.vivants > 50) return { q: makeHowManyQuestion(data.prenom, data.vivants), data }
+      } catch { /* skip */ }
+      return null
     }
+
+    // 1. Pick 3 communs
+    const communs = []
+    for (const p of shuffle(PRENOMS_COMMUNS)) {
+      if (communs.length >= 3) break
+      const r = await fetchEstimate(p)
+      if (r) communs.push(r)
+    }
+
+    // 2. Pick 2 rares
+    const rares = []
+    for (const p of shuffle(PRENOMS_RARES)) {
+      if (rares.length >= 2) break
+      const r = await fetchEstimate(p)
+      if (r) rares.push(r)
+    }
+
+    // 3. Pick 1 celebrity death question from any fetched data
+    let celebQ = null
+    const allData = [...communs, ...rares]
+    for (const { data } of shuffle(allData)) {
+      if (!data.celebrites?.length) continue
+      const celeb = data.celebrites[Math.floor(Math.random() * data.celebrites.length)]
+      if (celeb.annee_deces && celeb.age_deces) {
+        celebQ = makeDeathYearQuestion(celeb)
+        break
+      }
+    }
+
+    // Assemble: 2 rares + 3 communs + 1 celeb, shuffled
+    const qs = [
+      ...rares.map((r) => r.q),
+      ...communs.map((r) => r.q),
+      ...(celebQ ? [celebQ] : []),
+    ]
 
     setLoading(false)
     return shuffle(qs).slice(0, ROUNDS)
