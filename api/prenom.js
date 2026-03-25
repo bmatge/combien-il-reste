@@ -200,21 +200,27 @@ function computeStats(prenom) {
     })
   }
 
-  // 7. Statut — takes trend into account, not just absolute count
-  // Recent births (last 10 years) vs. peak
+  // 7. Statut — considers trend, survival, not just headcount
   const recentYears = Object.entries(yearSums)
     .filter(([y]) => parseInt(y) >= CURRENT_YEAR - 10)
   const recentBirths = recentYears.reduce((s, [, n]) => s + n, 0)
   const avgRecentBirths = recentYears.length > 0 ? recentBirths / recentYears.length : 0
-  const isGrowing = avgRecentBirths > 5 // Still being given to kids
+  const stillGiven = avgRecentBirths >= 5 // Still being given to kids
+  const survivalRate = totalNaissances > 0 ? vivants / totalNaissances : 0
 
   let statut
-  if (vivants < 1000 && !isGrowing) statut = "🔴 En voie d'extinction"
-  else if (vivants < 1000 && isGrowing) statut = '🟡 Rare'
-  else if (vivants < 10000 && !isGrowing) statut = '🟠 Menacé'
-  else if (vivants < 10000) statut = '🟡 Rare'
-  else if (vivants < 50000) statut = '🟡 Rare'
-  else statut = '🟢 Commun'
+  if (vivants < 1000) {
+    if (survivalRate > 0.8 || stillGiven) statut = '🟡 Rare'        // Young/growing: not dying out
+    else if (survivalRate > 0.3) statut = '🟠 Menacé'               // Declining but many still alive
+    else statut = "🔴 En voie d'extinction"                          // Old, few left, no new ones
+  } else if (vivants < 10000) {
+    if (!stillGiven && survivalRate < 0.3) statut = '🟠 Menacé'
+    else statut = '🟡 Rare'
+  } else if (vivants < 50000) {
+    statut = '🟡 Rare'
+  } else {
+    statut = '🟢 Commun'
+  }
 
   // 8. Âge médian (Gompertz)
   const vivantsParAge = []
