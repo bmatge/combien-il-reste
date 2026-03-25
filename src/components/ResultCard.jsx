@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { titleCase, formatNumber } from '../utils/prenomUtils'
 import { getEasterEgg } from '../utils/easterEggs'
 import StatusBadge from './StatusBadge'
@@ -6,9 +7,11 @@ import PouvoirMeter from './PouvoirMeter'
 import PouvoirBreakdown from './PouvoirBreakdown'
 import EasterEgg from './EasterEgg'
 import Celebrites from './Celebrites'
+import ShareCard from './ShareCard'
 import {
   IconUsers, IconTrendDown, IconClock, IconBaby,
   IconCalendar, IconPercent, IconTrendUp, IconMale, IconFemale,
+  IconShare,
 } from './Icons'
 
 const EXTINCTION_UNRELIABLE_AFTER = 2226
@@ -108,6 +111,7 @@ function buildKpis(data, extinctionLointaine, survivalRate, yearsLeft) {
 }
 
 export default function ResultCard({ prenom, data }) {
+  const [showShare, setShowShare] = useState(false)
   const egg = getEasterEgg(prenom, data)
   const extinctionLointaine = data.annee_extinction && data.annee_extinction > EXTINCTION_UNRELIABLE_AFTER
   const survivalRate = data.total_naissances > 0
@@ -120,27 +124,36 @@ export default function ResultCard({ prenom, data }) {
   const hasCelebs = data.celebrites?.length > 0
 
   return (
-    <div className="mt-8">
-      {/* Header bar: name + count + badge — single line, centered */}
-      <div className="bg-white rounded-t-3xl shadow-lg border border-b-0 border-gris-clair px-6 py-4 flex items-baseline justify-center gap-3 flex-wrap">
-        <h2 className="text-3xl font-bold text-noir tracking-tight">
-          {titleCase(prenom)}
-        </h2>
-        <span className="text-gris font-medium">&mdash;</span>
-        <span className="text-2xl md:text-3xl font-black text-noir tabular-nums">
-          {formatNumber(data.vivants)}
-        </span>
-        <span className="text-sm text-gris">en vie</span>
-        <StatusBadge statut={data.statut} blink={egg?.blink} />
+    <div className="mt-6 space-y-px">
+      {/* Header card */}
+      <div className="bg-white rounded-t-3xl shadow-lg border border-gris-clair px-8 md:px-12 py-6 text-center relative">
+        <button
+          onClick={() => setShowShare(true)}
+          className="absolute top-4 right-4 p-2 rounded-full text-gris hover:text-noir hover:bg-gris-clair transition-all cursor-pointer"
+          title="Partager"
+        >
+          <IconShare className="w-5 h-5" />
+        </button>
+        <div className="flex items-center justify-center gap-3">
+          <h2 className="text-4xl md:text-5xl font-black text-noir tracking-tight">
+            {titleCase(prenom)}
+          </h2>
+          <StatusBadge statut={data.statut} blink={egg?.blink} />
+        </div>
+        <p className="mt-2 text-lg text-gris">
+          Encore <span className="text-2xl md:text-3xl font-black text-noir tabular-nums">{formatNumber(data.vivants)}</span> en France
+        </p>
       </div>
 
-      {/* Two-column layout on desktop */}
-      <div className="lg:flex bg-white rounded-b-3xl shadow-lg border border-t-0 border-gris-clair overflow-hidden">
+      {/* Data card */}
+      <div className="bg-white rounded-b-3xl shadow-lg border border-t-0 border-gris-clair overflow-hidden">
 
+      {/* Two-column layout on desktop */}
+      <div className="lg:flex">
         {/* LEFT column: KPIs + Chart */}
         <div className="lg:flex-1 min-w-0">
           {/* KPI grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 border-b border-gris-clair/60">
+          <div className="grid grid-cols-2 lg:grid-cols-3">
             {kpis.map((kpi, i) => (
               <div
                 key={i}
@@ -179,7 +192,6 @@ export default function ResultCard({ prenom, data }) {
         {/* RIGHT column: Pouvoir + Célébrités */}
         {(hasPouvoir || hasCelebs) && (
           <div className="lg:w-80 xl:w-96 2xl:w-[28rem] border-t lg:border-t-0 lg:border-l border-gris-clair/60 flex flex-col shrink-0">
-            {/* Pouvoir */}
             {hasPouvoir && (
               <div className="px-5 py-5 border-b border-gris-clair/60">
                 <PouvoirMeter
@@ -190,7 +202,6 @@ export default function ResultCard({ prenom, data }) {
               </div>
             )}
 
-            {/* Célébrités */}
             {hasCelebs && (
               <div className="flex-1">
                 <Celebrites celebrites={data.celebrites} ageMedian={data.age_median} />
@@ -199,6 +210,11 @@ export default function ResultCard({ prenom, data }) {
           </div>
         )}
       </div>
+      </div>
+
+      {showShare && (
+        <ShareCard prenom={prenom} data={data} onClose={() => setShowShare(false)} />
+      )}
     </div>
   )
 }

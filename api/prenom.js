@@ -200,10 +200,19 @@ function computeStats(prenom) {
     })
   }
 
-  // 7. Statut
+  // 7. Statut — takes trend into account, not just absolute count
+  // Recent births (last 10 years) vs. peak
+  const recentYears = Object.entries(yearSums)
+    .filter(([y]) => parseInt(y) >= CURRENT_YEAR - 10)
+  const recentBirths = recentYears.reduce((s, [, n]) => s + n, 0)
+  const avgRecentBirths = recentYears.length > 0 ? recentBirths / recentYears.length : 0
+  const isGrowing = avgRecentBirths > 5 // Still being given to kids
+
   let statut
-  if (vivants < 1000) statut = "🔴 En voie d'extinction"
-  else if (vivants < 10000) statut = '🟠 Menacé'
+  if (vivants < 1000 && !isGrowing) statut = "🔴 En voie d'extinction"
+  else if (vivants < 1000 && isGrowing) statut = '🟡 Rare'
+  else if (vivants < 10000 && !isGrowing) statut = '🟠 Menacé'
+  else if (vivants < 10000) statut = '🟡 Rare'
   else if (vivants < 50000) statut = '🟡 Rare'
   else statut = '🟢 Commun'
 

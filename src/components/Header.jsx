@@ -1,5 +1,43 @@
+import { useState, useEffect, useCallback } from 'react'
 import NavTabs from './NavTabs'
 import { IconSkull } from './Icons'
+import { titleCase } from '../utils/prenomUtils'
+
+const SAMPLE_PRENOMS = [
+  'JEAN', 'MARIE', 'KEVIN', 'GERARD', 'JADE', 'MARCEL',
+  'NATHALIE', 'PHILIPPE', 'MONIQUE', 'LUCAS', 'YVETTE',
+  'NICOLAS', 'SYLVIE', 'PATRICK', 'BERNARD', 'EMMA',
+  'CHRISTOPHE', 'SIMONE', 'THIERRY', 'SANDRINE', 'RENE',
+  'ELODIE', 'PIERRE', 'FRANCOISE', 'ALBERT', 'VIRGINIE',
+]
+
+function RotatingPrenom() {
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * SAMPLE_PRENOMS.length))
+  const [visible, setVisible] = useState(true)
+
+  const cycle = useCallback(() => {
+    setVisible(false)
+    setTimeout(() => {
+      setIndex((i) => (i + 1) % SAMPLE_PRENOMS.length)
+      setVisible(true)
+    }, 300)
+  }, [])
+
+  useEffect(() => {
+    const id = setInterval(cycle, 2500)
+    return () => clearInterval(id)
+  }, [cycle])
+
+  return (
+    <span
+      className={`inline-block font-semibold text-noir transition-all duration-300 ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'
+      }`}
+    >
+      {titleCase(SAMPLE_PRENOMS[index])}
+    </span>
+  )
+}
 
 export default function Header() {
   return (
@@ -12,7 +50,7 @@ export default function Header() {
         <NavTabs />
       </div>
       <p className="text-gris text-sm italic">
-        L'INSEE sait combien il en reste.
+        Combien de <RotatingPrenom /> reste-t-il en France ?
       </p>
     </header>
   )
