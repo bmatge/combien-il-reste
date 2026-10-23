@@ -1,5 +1,5 @@
 # --- Frontend build ---
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
@@ -7,7 +7,7 @@ COPY . .
 RUN npm run build
 
 # --- API (Node.js + SQLite) ---
-FROM node:20-alpine AS api
+FROM node:22-alpine AS api
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json* ./
