@@ -142,7 +142,7 @@ Réponse `?q=` :
 ## Installation
 
 ### Prérequis
-- Node.js 18+
+- Node.js 22+
 - Python 3.9+ avec pandas, numpy, openpyxl
 - ~6 Go d'espace disque (données brutes)
 
